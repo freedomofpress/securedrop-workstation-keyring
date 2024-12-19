@@ -26,8 +26,7 @@ Summary:	SecureDrop Workstation Keyring
 %undefine py_auto_byte_compile
 
 License:	AGPLv3
-# TODO
-URL:		https://github.com/rocodes/securedrop-workstation-keyring
+URL:		https://github.com/freedomofpress/securedrop-workstation-keyring
 Source:		%{url}/archive/refs/tags/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 # See: https://docs.fedoraproject.org/en-US/packaging-guidelines/SourceURL/#_troublesome_urls
 

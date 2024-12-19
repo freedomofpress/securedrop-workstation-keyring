@@ -26,7 +26,7 @@ build-deps: ## Install package dependencies to build RPMs
 .PHONY: test-deps
 test-deps: build-deps ## Install package dependencies for running tests
 	dnf install -y \
-		rpmlint which libfaketime ShellCheck \
+		python3-pip rpmlint which libfaketime ShellCheck \
 		hostname
 	dnf --setopt=install_weak_deps=False -y install reprotest
 
