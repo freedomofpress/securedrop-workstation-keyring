@@ -1,4 +1,4 @@
-Name:		securedrop-workstation-keyring
+Name:       securedrop-workstation-keyring
 Version:    0.1.0
 Release:    1%{?dist}
 Summary:	SecureDrop Workstation Keyring
@@ -55,11 +55,32 @@ install -m 644 %{_builddir}/files/securedrop-release-signing-pubkey-2021.asc %{b
 /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
 /etc/yum.repos.d/securedrop-workstation-dom0.repo
 
-%post
-# TODO
-# If installing: import key
-# If upgrading: remove key from rpm and reimport key
-# If removing: remove key from rpm
+%postun
+# Uninstall
+if [ $1 -eq 0 ] ; then
+    systemd-run  --on-active=15s rpm -e gpg-pubkey-7b22e6a3-609966ad ||:
+fi
+
+%posttrans
+# For versions of rpm >= 4.2.0 and rpm-sequoia >= 1.7.0, importing
+# an updated key (same fingerprint, different subkeys) will successfully
+# update the key, and this can be simplified to a single rpm --import
+# command. But until that lands in dom0, ship this logic (in case of unexpected
+# upgrade).
+#
+# New install
+if [ $1 -eq 1 ] ; then
+    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+fi
+# Upgrade. Uninstall old key then install new key.
+if [ $1 -gt 1 ] ; then
+    # Remove SecureDrop Release Signing Key. In rpm database, the
+    # pubkey name format is `gpg-pubkey-$VERSION-$CREATION_SEC_SINCE_UNIX_EPOCH`,
+    # where $VERSION is the last 8 characters of the GPG key's fingerprint, and
+    # $CREATIONDATE is the key creation date, expressed as
+    # `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec"`
+    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-7b22e6a3-609966ad; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation' ||:
+fi
 
 %changelog
 * Mon Dec 2 2024 13:12:00 SecureDrop Team <securedrop@freedom.press> - 0.1.0
