@@ -25,4 +25,4 @@ echo "RPM installed. (Wait 60 seconds to begin smoketest)..."
 sleep 60
 
 echo "Begin smoketest..."
-python3 "${TOPLEVEL}/tests/test_keyring.py" && echo "Test complete" || echo "Test failed"
+python3 "${TOPLEVEL}/tests/test_keyring.py"
