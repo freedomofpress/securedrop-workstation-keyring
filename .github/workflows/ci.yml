@@ -40,3 +40,31 @@ jobs:
         run: |
           make test-deps
           make reprotest
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: rpm-build
+          path: rpm-build/RPMS/noarch/*.rpm
+          if-no-files-found: error
+  test-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.fedoraproject.org/fedora:37
+    needs: build-rpm
+    steps:
+      - run: dnf install -y git make
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          git config --global --add safe.directory '*'
+          make test-deps
+      - uses: actions/download-artifact@v4
+        with:
+          name: rpm-build
+          path: rpm-build/RPMS/noarch/
+          pattern: "*.rpm"
+      - name: Install RPM and run smoketest
+        run: |
+          make smoketest RPM=rpm-build/RPMS/noarch/*fc37.noarch.rpm

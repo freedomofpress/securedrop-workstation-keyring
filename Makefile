@@ -27,7 +27,7 @@ build-deps: ## Install package dependencies to build RPMs
 test-deps: build-deps ## Install package dependencies for running tests
 	dnf install -y \
 		python3-pip rpmlint which libfaketime ShellCheck \
-		hostname
+		hostname systemd
 	dnf --setopt=install_weak_deps=False -y install reprotest
 
 .PHONY: lint
@@ -40,6 +40,11 @@ rpmlint: ## Runs rpmlint on the spec file
 .PHONY: shellcheck
 shellcheck: ## Runs shellcheck on all shell scripts
 	./scripts/shellcheck.sh
+
+.PHONY: smoketest
+smoketest: ## Run smoketest (builds rpm if none provided)
+    # Run against a prebuilt rpm via `make smoketest RPM=path-to-rpm`
+	$(CONTAINER) ./scripts/smoketest.sh $(RPM)
 
 # Explanation of the below shell command should it ever break.
 # 1. Set the field separator to ": ##" to parse lines for make targets.
