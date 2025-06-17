@@ -31,10 +31,11 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         run: |
-          make build-deps
+          make test-deps
       - name: Build RPM
         run: |
           git config --global --add safe.directory '*'
+          make prepare
           make build-rpm
       - name: Check reproducibility
         run: |
