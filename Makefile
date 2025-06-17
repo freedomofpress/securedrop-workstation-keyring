@@ -21,7 +21,6 @@ build-deps: ## Install package dependencies to build RPMs
 # Note: build dependencies are specified in the spec file, not here
 	dnf install -y \
 		git file rpmdevtools dnf-plugins-core
-	dnf builddep -y rpm-build/SPECS/securedrop-workstation-keyring.spec
 
 .PHONY: test-deps
 test-deps: build-deps ## Install package dependencies for running tests
@@ -35,7 +34,7 @@ lint: rpmlint shellcheck ## Runs linter (rpmlint, shellcheck)
 
 .PHONY: rpmlint
 rpmlint: ## Runs rpmlint on the spec file
-	$(CONTAINER) rpmlint rpm-build/SPECS/*.spec
+	$(CONTAINER) rpmlint rpm_spec/*.spec
 
 .PHONY: shellcheck
 shellcheck: ## Runs shellcheck on all shell scripts
