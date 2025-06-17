@@ -31,16 +31,10 @@ Source:		%{url}/archive/refs/tags/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 # See: https://docs.fedoraproject.org/en-US/packaging-guidelines/SourceURL/#_troublesome_urls
 
 BuildArch:		noarch
-#BuildRequires:	systemd-rpm-macros
-BuildRequires: make
-
 
 %description
 This package contains the SecureDrop Release public key and yum .repo file
 used to bootstrap installation of SecureDrop Workstation.
-
-%prep
-%setup -q -n files
 
 %build
 # No building necessary
@@ -48,8 +42,8 @@ used to bootstrap installation of SecureDrop Workstation.
 %install
 install -m 755 -d %{buildroot}/etc/yum.repos.d
 install -m 755 -d %{buildroot}/etc/pki/rpm-gpg
-install -m 644 %{_builddir}/files/securedrop-workstation-dom0.repo %{buildroot}/etc/yum.repos.d/
-install -m 644 %{_builddir}/files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
+install -m 644 %{_projdir}/files/securedrop-workstation-dom0.repo %{buildroot}/etc/yum.repos.d/
+install -m 644 %{_projdir}/files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
 
 %files
 /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation

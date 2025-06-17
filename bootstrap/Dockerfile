@@ -10,7 +10,6 @@ ENV USER_ID ${USER_ID:-0}
 RUN dnf install -y make
 
 COPY Makefile Makefile
-COPY rpm-build/SPECS rpm-build/SPECS
 
 ARG DEPS=build-deps
 RUN make ${DEPS}
