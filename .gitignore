@@ -1,12 +1,5 @@
 # upstream
 pkgs
-
-# tarball directory used before build stage 
-src/
  
 # rpm package build artifacts
-*.rpm
-*.tar.gz
-rpm-build/BUILD/
-rpm-build/BUILDROOT/
-rpm-build/SOURCES/
+rpm-build/
