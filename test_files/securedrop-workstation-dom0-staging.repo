@@ -1,0 +1,7 @@
+[securedrop-workstation-dom0]
+gpgcheck=1
+skip_if_unavailable=False
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
+enabled=1
+baseurl=https://yum-test.securedrop.org/workstation/dom0/f37
+name=SecureDrop Workstation Qubes dom0 repo

@@ -10,6 +10,10 @@ HOST=$(shell hostname)
 build-rpm: ## Build RPM package
 	USE_BUILD_CONTAINER=true $(CONTAINER) ./scripts/build-rpm.sh
 
+.PHONY: build-rpm-test
+build-rpm-test: ## Build RPM package
+	USE_BUILD_CONTAINER=true SPECFILE_DIR=test_rpm_spec $(CONTAINER) ./scripts/build-rpm.sh
+
 # FIXME: the time variations have been temporarily removed from reprotest
 # Suspecting upstream issues in rpm land is causing issues with 1 file\'s modification time not being clamped correctly only in a reprotest environment
 .PHONY: reprotest
@@ -35,6 +39,7 @@ lint: rpmlint shellcheck ## Runs linter (rpmlint, shellcheck)
 .PHONY: rpmlint
 rpmlint: ## Runs rpmlint on the spec file
 	$(CONTAINER) rpmlint rpm_spec/*.spec
+	$(CONTAINER) rpmlint test_rpm_spec/*.spec
 
 .PHONY: shellcheck
 shellcheck: ## Runs shellcheck on all shell scripts
