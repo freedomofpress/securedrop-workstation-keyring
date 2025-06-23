@@ -6,9 +6,15 @@ set -o pipefail
 
 source "$(dirname "$0")/common.sh"
 
-# Default to prod (rpm_spec directory) but
-# allow override for test RPM purposes
-SPECFILE_DIR=${SPECFILE_DIR:-rpm_spec}
+# Default to prod (rpm_spec directory)
+SPECFILE_DIR="rpm_spec"
+
+for arg in "$@"; do
+    if [[ "$arg" == "--non-prod" ]]; then
+        # Build testing and staging versions
+        SPECFILE_DIR="test_rpm_spec"
+    fi
+done
 
 # %_projdir is a custom macro that lets us
 # refer to static files inside the project directory

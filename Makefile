@@ -12,7 +12,7 @@ build-rpm: ## Build RPM package
 
 .PHONY: build-rpm-test
 build-rpm-test: ## Build RPM package
-	USE_BUILD_CONTAINER=true SPECFILE_DIR=test_rpm_spec $(CONTAINER) ./scripts/build-rpm.sh
+	USE_BUILD_CONTAINER=true $(CONTAINER) ./scripts/build-rpm.sh --non-prod
 
 # FIXME: the time variations have been temporarily removed from reprotest
 # Suspecting upstream issues in rpm land is causing issues with 1 file\'s modification time not being clamped correctly only in a reprotest environment
