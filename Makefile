@@ -45,6 +45,10 @@ rpmlint: ## Runs rpmlint on the spec file
 shellcheck: ## Runs shellcheck on all shell scripts
 	./scripts/shellcheck.sh
 
+.PHONY: clean
+clean:  ## Clean the workspace of generated resources
+	@rm -rf rpm-build/
+
 # Explanation of the below shell command should it ever break.
 # 1. Set the field separator to ": ##" to parse lines for make targets.
 # 2. Check for second field matching, skip otherwise.
