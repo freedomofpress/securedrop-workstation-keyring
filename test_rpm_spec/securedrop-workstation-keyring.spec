@@ -63,13 +63,39 @@ install -m 644  %{_projdir}/test_files/securedrop-test-key.asc %{buildroot}/etc/
 /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test
 /etc/yum.repos.d/securedrop-workstation-dom0-dev.repo
 
-%postun
+%postun staging
+# Uninstall
+if [ $1 -eq 0 ] ; then
+    systemd-run  --on-active=15s rpm -e gpg-pubkey-3fab65ab-660f2beb ||:
+fi
+%postun dev
 # Uninstall
 if [ $1 -eq 0 ] ; then
     systemd-run  --on-active=15s rpm -e gpg-pubkey-3fab65ab-660f2beb ||:
 fi
 
-%posttrans
+%posttrans staging
+# For versions of rpm >= 4.2.0 and rpm-sequoia >= 1.7.0, importing
+# an updated key (same fingerprint, different subkeys) will successfully
+# update the key, and this can be simplified to a single rpm --import
+# command. But until that lands in dom0, ship this logic (in case of unexpected
+# upgrade).
+#
+# New install
+if [ $1 -eq 1 ] ; then
+    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test ||:
+fi
+# Upgrade. Uninstall old key then install new key.
+if [ $1 -gt 1 ] ; then
+    # Remove SecureDrop Release Signing Key. In rpm database, the
+    # pubkey name format is `gpg-pubkey-$VERSION-$CREATION_SEC_SINCE_UNIX_EPOCH`,
+    # where $VERSION is the last 8 characters of the GPG key's fingerprint, and
+    # $CREATIONDATE is the key creation date, expressed as
+    # `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec"`
+    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-3fab65ab-660f2beb; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test' ||:
+fi
+
+%posttrans dev
 # For versions of rpm >= 4.2.0 and rpm-sequoia >= 1.7.0, importing
 # an updated key (same fingerprint, different subkeys) will successfully
 # update the key, and this can be simplified to a single rpm --import
