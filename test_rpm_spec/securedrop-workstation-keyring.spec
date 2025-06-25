@@ -66,7 +66,7 @@ install -m 644  %{_projdir}/test_files/securedrop-test-key.asc %{buildroot}/etc/
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    systemd-run  --on-active=15s rpm -e gpg-pubkey-TODO_TEST_KEY_ID ||:
+    systemd-run  --on-active=15s rpm -e gpg-pubkey-3fab65ab-660f2beb ||:
 fi
 
 %posttrans
@@ -87,7 +87,7 @@ if [ $1 -gt 1 ] ; then
     # where $VERSION is the last 8 characters of the GPG key's fingerprint, and
     # $CREATIONDATE is the key creation date, expressed as
     # `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec"`
-    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-TODO_TEST_KEY; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test' ||:
+    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-3fab65ab-660f2beb; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test' ||:
 fi
 
 %changelog
