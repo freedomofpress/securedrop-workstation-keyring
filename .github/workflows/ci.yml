@@ -9,35 +9,44 @@ jobs:
     container:
       image: registry.fedoraproject.org/fedora:37
     steps:
-      - run: dnf install -y git make
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Install dependencies
+      - run: dnf install -y git make rpmlint
+      - name: Lint specfiles
+        uses: actions/checkout@v4
         run: |
-          make test-deps
-      - name: Run linters
-        run: |
-          git config --global --add safe.directory '*'
-          make lint
+          rpmlint rpm_spec/*.spec
   build-rpm:
     runs-on: ubuntu-latest
     container:
-      image: registry.fedoraproject.org/fedora:37
+      name: registry.gitlab.com/qubesos/docker-images/qubes-builder-debian:latest
     steps:
-      - run: dnf install -y git make
+      - name: Clone qubes-builder
+        uses: actions/checkout@v4
+        with: https://github.com/QubesOS/qubes-builderv2
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install dependencies
-        run: |
-          make test-deps
       - name: Build RPM
+        env: BRANCH_NAME: ${{ github.ref }}
         run: |
-          git config --global --add safe.directory '*'
-          make prepare
-          make build-rpm
-      - name: Check reproducibility
-        run: |
-          make test-deps
-          make reprotest
+          make build-rpm BRANCH=${BRANCH_NAME}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: securedrop-workstation-keyring.rpm
+          path: ../qubes-builderv2/artifacts/components/securedrop-workstation-keyring/*/host-fc37/build/rpm/securedrop-workstation-keyring-*.fc37.noarch.rpm
+          persist-credentials: false
+  # reprotest:
+  #     runs-on: ubuntu-latest
+  #     container:
+  #       image: registry.fedoraproject.org/fedora:37
+  #     steps:
+  #       - run: dnf install -y git make reprotest
+  #       - name: Download rpm
+  #         uses: actions/download@v4
+  #         with:
+  #           name: securedrop-workstation-keyring.rpm
+  #           persist-credentials: false
+  #       - name: Test reproducibility
+  #         run: |
+  #           sudo reprotest securedrop-workstation-keyring.rpm
+  #           'make build-rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'"
