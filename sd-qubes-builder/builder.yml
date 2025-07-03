@@ -1,0 +1,53 @@
+git:
+  baseurl: https://github.com
+  prefix: QubesOS/qubes-
+  branch: release4.2
+  maintainers:
+    # marmarek
+    - '0064428F455451B3EBE78A7F063938BA42CFA724'
+    # simon
+    - '274E12AB03F2FE293765FC06DA0434BC706E1FCF'
+
+backend-vmm: xen
+debug: true
+verbose: true
+qubes-release: r4.2
+use-qubes-repo:
+  version: 4.2
+  testing: false
+
+#### Enable this to develop directly in artifacts/sources/securedrop-workstation-keyring
+# skip-git-fetch: true
+
+distributions:
+  - host-fc37
+
+components:
+  - builder-rpm:
+      packages: False
+      branch: main
+  - builder-debian:
+      packages: False
+      branch: main
+  - securedrop-workstation-keyring:
+      branch: main # <--- Target branch here (changes must be pushed)
+      url: https://github.com/freedomofpress/securedrop-workstation-keyring
+      maintainers:
+        - 91B3D67D8758449546256E7EFC72AA838C444B47
+        - A89B3BDDD5629F35E017ADC052474EA8BFD9CBF1
+      verification-mode: insecure-skip-checking
+      # Import maintaner keys into ./qubesbuilder/plugins/fetch/keys/<KEY_ID>.asc
+      # For WIP changes, verification-mode: insecure-skip-checking
+
+executor:
+ type: docker
+ options:
+   image: "qubes-builder-fedora:latest"
+
+stages:
+  - fetch
+  - prep
+  - build
+  - post
+  - verify
+# todo: do we want post and verify?
