@@ -1,5 +1,1 @@
-# upstream
-pkgs
- 
-# rpm package build artifacts
-rpm-build/
+build/

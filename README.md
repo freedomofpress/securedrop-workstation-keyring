@@ -9,19 +9,17 @@ The production package will be hosted in Qubes-contrib.
 **At the moment this repo is experimental and should not be part of a production SDW installation.**
 
 ## Setup instructions
-Clone this repository and ensure your system has sufficient free space. On non-Qubes
-systems, install Docker.
+Clone this repository and ensure your system has sufficient free space.
+On non-Qubes systems, install Docker.
 
-Then, either proceed to the convenience `make` targets, or clone the
-[qubes-builderv2](https://github.com/QubesOS/qubes-builderv2) repo in a sibling
-directory to this one.
+Then, either proceed to the convenience `make` targets, or clone the [qubes-builderv2](https://github.com/QubesOS/qubes-builderv2) repo in a sibling directory to this one.
 
 ## Build instructions
-On Qubes systems, `BUILD_OS=qubes` is required to use the
-Qubes Fedora executor.
+On Qubes systems, `BUILD_OS=qubes` is required to use the Qubes Fedora executor.
 
-`make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2. If the qubes-builderv2 repository is not installed in
-a sibling directory, it will be cloned. The first time the qubes-builderv2 repo is set up, the executor image will be generated, which takes some time.
+`make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
+If the qubes-builderv2 repository is not installed in a sibling directory, it will be cloned.
+The first time the qubes-builderv2 repo is set up, OS-specific dependencies will be installed (on local machines, you'll be prompted for your passphrase) and the executor image will be generated, which takes some time.
 
 `make build-rpm BRANCH=yourbranchname` also allows you to build from any branch.
 
