@@ -1,7 +1,7 @@
-Name:       securedrop-workstation-keyring
+Name:       securedrop-workstation-keyring-staging
 Version:    0.1.0
 Release:    1%{?dist}
-Summary:    SecureDrop Workstation Keyring
+Summary:    SecureDrop Workstation Keyring (staging)
 
 # For reproducible builds:
 #
@@ -35,7 +35,7 @@ Requires:   python%{python3_pkgversion}
 Source0: %{name}-%{version}.tar.gz
 
 %description
-This package contains the SecureDrop Release Signing Key and .repo file used to bootstrap installation of SecureDrop Workstation.
+This package contains the SecureDrop Test Key and .repo file used to bootstrap a staging installation of SecureDrop Workstation.
 
 %prep
 %setup -q
@@ -46,17 +46,17 @@ This package contains the SecureDrop Release Signing Key and .repo file used to 
 %install
 install -m 755 -d %{buildroot}/etc/yum.repos.d
 install -m 755 -d %{buildroot}/etc/pki/rpm-gpg
-install -m 644 files/securedrop-workstation-dom0.repo %{buildroot}/etc/yum.repos.d/
-install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
+install -m 644 files/securedrop-workstation-dom0-staging.repo %{buildroot}/etc/yum.repos.d/
+install -m 644 files/securedrop-test-key.asc %{buildroot}/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test
 
 %files
-/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
-/etc/yum.repos.d/securedrop-workstation-dom0.repo
+/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test
+/etc/yum.repos.d/securedrop-workstation-dom0-staging.repo
 
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    systemd-run  --on-active=15s rpm -e gpg-pubkey-7b22e6a3-609966ad ||:
+    systemd-run  --on-active=15s rpm -e gpg-pubkey-3fab65ab-660f2beb ||:
 fi
 
 %posttrans
@@ -68,7 +68,7 @@ fi
 #
 # New install
 if [ $1 -eq 1 ] ; then
-    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test ||:
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
@@ -77,9 +77,10 @@ if [ $1 -gt 1 ] ; then
     # where $VERSION is the last 8 characters of the GPG key's fingerprint, and
     # $CREATIONDATE is the key creation date, expressed as
     # `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec"`
-    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-7b22e6a3-609966ad; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation' ||:
+    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-3fab65ab-660f2beb; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation-test' ||:
 fi
 
 %changelog
+
 * Mon Dec 2 2024 13:12:00 SecureDrop Team <securedrop@freedom.press> - 0.1.0
 - Initial keyring/bootstrap package
