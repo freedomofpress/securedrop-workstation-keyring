@@ -3,18 +3,22 @@ DEFAULT_GOAL: help
 # To build from a different branch, `make build-rpm BRANCH=yourbranch` (builder.conf automatically modified)
 BRANCH ?= "main"
 
-# The executor can be docker or podman. Instructions
-# tested with docker, manual overrides possible.
-BUILD_CONTAINER ?= $(notdir $(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null))
-
 # On CI, manually install OS dependencies
 CI_SKIP_PREREQS ?= 0
 
+# The executor can be docker or podman. Instructions
+# tested with docker, manual overrides possible.
+BUILD_CONTAINER ?= $(notdir $(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null))
+EXECUTOR ?= "docker"
+EXECUTOROPTS ?= "image=qubes-builder-fedora:latest"
+
 # On Qubes, manually set BUILD_OS="qubes" to use the Fedora dispvm executor,
-# or leave unset to use docker/podman + VM OS
+# or leave unset to use docker/podman
 BUILD_OS ?= $(shell . /etc/os-release && echo $${ID_LIKE:-$$ID})
 ifeq ($(BUILD_OS),qubes)
 	BUILD_CONTAINER = ""
+	EXECUTOR = "qubes"
+	EXECUTOROPTS = "dispvm=builder-dvm"
 endif
 
 # Helper. Install qubes-builderv2 OS-specific dependencies
@@ -68,15 +72,15 @@ prepare: qubes-builder
 .PHONY: build-rpm
 build-rpm: prepare ## Build RPM package
 	@echo "Copy builder.yml into qubes-builderv2"
-	@cp sd-qubes-builder/builder.yml.conf ../qubes-builderv2/builder.yml
+	@cp sd-qubes-builder/sd-builder.yml.conf ../qubes-builderv2/sd-builder.yml
 	@echo "Will build from ${BRANCH}"
-	@sed -i "s/{{branch}}/${BRANCH}/g" "../qubes-builderv2/builder.yml"
+	@sed -i "s/{{branch}}/${BRANCH}/g" "../qubes-builderv2/sd-builder.yml"
 	@echo "Remove old build artifacts if present"
 	@((test -e build && rm -rf build)||:)
 	@echo "Clean qubes-builder before building"
 	@cd ../qubes-builderv2 && ((test -e artifacts && rm -rf artifacts)||:)
 	@echo "Begin build..."
-	@cd ../qubes-builderv2 && ./qb -c securedrop-workstation-keyring package fetch prep build
+	@cd ../qubes-builderv2 && ./qb --builder-conf sd-builder.yml --option executor:type=${EXECUTOR} --option executor:options:${EXECUTOROPTS} -c securedrop-workstation-keyring package fetch prep build
 	@mkdir -p build
 	@find ../qubes-builderv2/artifacts/components/securedrop-workstation-keyring -type f -iname "securedrop-workstation-keyring*.noarch.rpm" | xargs cp -t build/
 	@echo "Build complete, RPM(s) and checksum(s):"
