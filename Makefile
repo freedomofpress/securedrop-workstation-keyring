@@ -71,22 +71,7 @@ prepare: qubes-builder
 # any customizations other than target branch and our own signing keys.
 .PHONY: build-rpm
 build-rpm: prepare ## Build RPM package
-	@echo "Copy builder.yml into qubes-builderv2"
-	@cp sd-qubes-builder/sd-builder.yml.conf ../qubes-builderv2/sd-builder.yml
-	@echo "Will build from ${BRANCH}"
-	@sed -i "s/{{branch}}/${BRANCH}/g" "../qubes-builderv2/sd-builder.yml"
-	@echo "Remove old build artifacts if present"
-	@((test -e build && rm -rf build)||:)
-	@echo "Clean qubes-builder before building"
-	@cd ../qubes-builderv2 && ((test -e artifacts && rm -rf artifacts)||:)
-	@echo "Begin build..."
-	@cd ../qubes-builderv2 && ./qb --builder-conf sd-builder.yml --option executor:type=${EXECUTOR} --option executor:options:${EXECUTOROPTS} -c securedrop-workstation-keyring package fetch prep build
-	@mkdir -p build
-	@find ../qubes-builderv2/artifacts/components/securedrop-workstation-keyring -type f -iname "securedrop-workstation-keyring*.noarch.rpm" | xargs cp -t build/
-	@echo "Build complete, RPM(s) and checksum(s):"
-	@sha256sum build/*
-	@echo "Note: build directory is regenerated on every build!"
-	@echo "Save this .rpm locally if you want to preserve it and intend to run make build-rpm again."
+	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
 
 # Build a dev keyring rpm (test key and yum-test f37-nightly repo)
 # This provisions nightly CI builds of the securedrop-workstation-dom0-config RPM
