@@ -18,7 +18,7 @@ BUILD_OS ?= $(shell . /etc/os-release && echo $${ID_LIKE:-$$ID})
 ifeq ($(BUILD_OS),qubes)
 	BUILD_CONTAINER = ""
 	EXECUTOR = "qubes"
-	EXECUTOROPTS = "dispvm=builder-dvm"
+	EXECUTOROPTS = "dispvm=qubes-builder-dvm"
 endif
 
 .PHONY: builder-system-deps
@@ -30,8 +30,7 @@ else ifeq ($(BUILD_OS),fedora)
 	@echo "Installing Fedora dependencies..."
 	@xargs -r -a ../qubes-builderv2/dependencies-fedora.txt sudo dnf install -y
 else ifeq ($(BUILD_OS),qubes)
-	@echo "Installing Qubes (Fedora executor) dependencies..."
-	@xargs -r -a ../qubes-builderv2/dependencies-qubes-fedora-executor.txt sudo dnf install -y
+	@echo "Install Qubes (Fedora executor) dependencies manually in template"
 else
 	@echo "Unknown $(BUILD_OS), use manual install of qubes-builderv2 dependencies then retry"
 endif
@@ -46,7 +45,6 @@ prereqs: ## Docker/podman installed or BUILD_OS=qubes
 .PHONY: qubes-builder
 qubes-builder: prereqs ## qubes-builderv2 sibling repo and container
 	@(cd ../ && test -e qubes-builderv2 || git clone https://github.com/QubesOS/qubes-builderv2)
-	$(MAKE) prereqs
 ifeq ($(CI_SKIP_PREREQS),0)
 	@echo "Ensure system dependencies installed..."
 	@$(MAKE) builder-system-deps
@@ -71,8 +69,8 @@ prepare: ## Configure plugins, verify tag
 	@rm qubes-developers-keys.asc
 	@echo "qubes-builderv2 repository configured"
 
-.PHONY: build-rpm ## Build rpm (default: prod)
-build-rpm: prepare
+.PHONY: build-rpm
+build-rpm: prepare ## Build rpm (default: prod)
 	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
 
 .PHONY: build-rpm-dev
@@ -97,7 +95,7 @@ ci-deps: ## Install package dependencies for running tests
 	dnf install -y \
 		git make sudo file rpmdevtools dnf-plugins-core rpmlint which libfaketime
 	dnf --setopt=install_weak_deps=False -y install reprotest
-	dnf builddep -y rpm_spec/securedrop-workstation-keyring.spec
+	dnf builddep -y --spec rpm_spec/securedrop-workstation-keyring.spec
 
 .PHONY: rpmlint
 rpmlint: ## Runs rpmlint on the spec file

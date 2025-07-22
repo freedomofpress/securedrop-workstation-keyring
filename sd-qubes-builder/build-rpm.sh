@@ -20,6 +20,11 @@ sed -i "s/{{branch}}/${BRANCH}/g" "../qubes-builderv2/sd-builder.yml"
 echo "Remove old build artifacts if present"
 rm -rf build || true
 
+# qubes-builderv2 repo clones and caches a copy of the target
+# git repository. If building from branches that have had
+# force-pushes, or if switching branches, stale git artifacts
+# or a requirement for a rebase can break the qubes-builder
+# automation. 
 echo "Remove SDW-keyring sources from qubes-builder"
 rm -rf ../qubes-builderv2/artifacts/sources/securedrop-workstation-keyring || true
 rm -rf ../qubes-builderv2/artifacts/repository/*/securedrop-workstation-keyring* || true
