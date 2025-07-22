@@ -1,19 +1,19 @@
 DEFAULT_GOAL: help
 
-# To build from a different branch, `make build-rpm BRANCH=yourbranch` (builder.conf automatically modified)
+# To build from a different branch, use the provided `dev` or `staging`
+# make targets, or `make build-rpm BRANCH=yourbranch`
 BRANCH ?= "main"
 
 # On CI, manually install OS dependencies
 CI_SKIP_PREREQS ?= 0
 
-# The executor can be docker or podman. Instructions
-# tested with docker, manual overrides possible.
+# The executor can be docker or podman, or the Qubes Fedora dispvm executor.
 BUILD_CONTAINER ?= $(notdir $(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null))
 EXECUTOR ?= "docker"
 EXECUTOROPTS ?= "image=qubes-builder-fedora:latest"
 
-# On Qubes, manually set BUILD_OS="qubes" to use the Fedora dispvm executor,
-# or leave unset to use docker/podman
+# On Qubes, export BUILD_OS="qubes" to use the Fedora dispvm executor,
+# or leave unset to use docker/podman.
 BUILD_OS ?= $(shell . /etc/os-release && echo $${ID_LIKE:-$$ID})
 ifeq ($(BUILD_OS),qubes)
 	BUILD_CONTAINER = ""
@@ -21,9 +21,8 @@ ifeq ($(BUILD_OS),qubes)
 	EXECUTOROPTS = "dispvm=builder-dvm"
 endif
 
-# Helper. Install qubes-builderv2 OS-specific dependencies
 .PHONY: builder-system-deps
-builder-system-deps:
+builder-system-deps: ## qubes-builderv2 OS dependencies
 ifeq ($(BUILD_OS),debian)
 	@echo "Installing Debian dependencies..."
 	@xargs -r -a ../qubes-builderv2/dependencies-debian.txt sudo apt-get install -y
@@ -37,59 +36,58 @@ else
 	@echo "Unknown $(BUILD_OS), use manual install of qubes-builderv2 dependencies then retry"
 endif
 
-# Helper: Docker/podman must be installed or BUILD_OS must be "qubes"
 .PHONY: prereqs
-prereqs:
-	@(((which podman > /dev/null || which docker > /dev/null) && exit 0) && [ ${BUILD_OS} != "qubes" ]) || (echo "Install an executor or set BUILD_OS=qubes to use Qubes-Fedora executor" && exit 1)
+prereqs: ## Docker/podman installed or BUILD_OS=qubes
+	@if ! command -v docker > /dev/null && ! command -v podman > /dev/null && "${BUILD_OS}" != "qubes"; then \
+		echo "Install Docker or Podman, or set BUILD_OS=qubes to use Qubes-Fedora executor."; \
+		exit 1; \
+	fi
 
-# Ensure qubes-builderv2 repo exists in a sibling directory to this project,
-# and container image is ready
 .PHONY: qubes-builder
-qubes-builder:
+qubes-builder: prereqs ## qubes-builderv2 sibling repo and container
 	@(cd ../ && test -e qubes-builderv2 || git clone https://github.com/QubesOS/qubes-builderv2)
 	$(MAKE) prereqs
 ifeq ($(CI_SKIP_PREREQS),0)
 	@echo "Ensure system dependencies installed..."
 	@$(MAKE) builder-system-deps
 endif
-	@if [ -z ${BUILD_CONTAINER} ]; then \
+	@if [ "${BUILD_OS}" != "qubes" ]; then \
 	    echo "Generate build image..." && \
 		../qubes-builderv2/tools/generate-container-image.sh $(BUILD_CONTAINER);\
 	fi
 	@echo "Container image ready"
 
-# Helper. Copy maintainer keys into qubes-builderv2 plugins directory
-# (required for verifying signed tag and commits)
 .PHONY: prepare
-prepare: qubes-builder
-	@$(test -e ../qubes-builderv2 || echo "Please install qubes-builderv2 in a sibling directory and configure its dependencies")
+prepare: ## Configure plugins, verify tag
+	@if [ ! -e ../qubes-builderv2 ]; then \
+		echo "Error: Run \`make qubes-builder\` or install qubes-builderv2 in a sibling directory and configure its dependencies."; \
+		exit 1; \
+	fi
+	@wget -q https://keys.qubes-os.org/keys/qubes-developers-keys.asc
+	@gpg --import --quiet qubes-developers-keys.asc
+	@echo "Verify qubes-builderv2 tag"
+	@cd ../qubes-builderv2 && git tag -v `git describe` || (echo "Failed to verify tag" && exit 1)
 	@cp sd-qubes-builder/*.asc ../qubes-builderv2/qubesbuilder/plugins/fetch/keys/
-	@echo "qubes-builderv2 repo installed"
+	@rm qubes-developers-keys.asc
+	@echo "qubes-builderv2 repository configured"
 
-# Default to main, custom branch via "make build-rpm BRANCH=yourbranch".
-# Note that Qubes-Contrib will not use this builder.yml file, so we avoid
-# any customizations other than target branch and our own signing keys.
-.PHONY: build-rpm
-build-rpm: prepare ## Build RPM package
+.PHONY: build-rpm ## Build rpm (default: prod)
+build-rpm: prepare
 	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
 
-# Build a dev keyring rpm (test key and yum-test f37-nightly repo)
-# This provisions nightly CI builds of the securedrop-workstation-dom0-config RPM
 .PHONY: build-rpm-dev
-build-rpm-dev:
+build-rpm-dev: ## Build dev rpm (test key, yum-test f37-nightly repo)
 	$(MAKE) build-rpm BRANCH=dev
 
-# Build a dev keyring rpm (test key and yum-test f37-nightly repo)
-# This provisions nightly CI builds of the securedrop-workstation-dom0-config RPM
 .PHONY: build-rpm-staging
-build-rpm-staging:
+build-rpm-staging: ## Build staging rpm (test key, yum-test f37 repo)
 	$(MAKE) build-rpm BRANCH=staging
 
 .PHONY: reprotest
-reprotest:
-	@((which reprotest > /dev/null) && exit 0) || (echo "Install reprotest" && exit 1)
-	@(test -e build/*.rpm || (echo "Run `make build-rpm` first" && exit 1))
-	@sudo reprotest 'make build-rpm BRANCH=${BRANCH}' 'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
+reprotest: ## Test reproducibility
+	@which reprotest > /dev/null || (echo "Install reprotest" && exit 1)
+	@test -e build/*.rpm || (echo "Run \`make build-rpm\` first" && exit 1)
+	@sudo reprotest 'make build-rpm BRANCH="${BRANCH}"' 'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
 
 ## The below commands should run in CI or a Fedora environment
 # FIXME: the time variations have been temporarily removed from reprotest

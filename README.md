@@ -17,9 +17,18 @@ Then, either proceed to the convenience `make` targets, or clone the [qubes-buil
 ## Build instructions
 On Qubes systems, `BUILD_OS=qubes` is required to use the Qubes Fedora executor.
 
-`make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
+To set up the qubes-builderv2 repository and generate the build container, run:
+`make qubes-builder`.
+
+Then run `make build-rpm`.
+
 If the qubes-builderv2 repository is not installed in a sibling directory, it will be cloned.
 The first time the qubes-builderv2 repo is set up, OS-specific dependencies will be installed (on local machines, you'll be prompted for your passphrase) and the executor image will be generated, which takes some time.
+
+If you have already set up and configured the qubes-builderv2 repository, skip directly to running `make build-rpm`.
+
+### Build variants
+`make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
 
 `make build-rpm BRANCH=yourbranchname` also allows you to build from any branch.
 

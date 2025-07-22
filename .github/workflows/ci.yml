@@ -27,6 +27,10 @@ jobs:
         with:
           repository: QubesOS/qubes-builderv2
           path: qubes-builderv2
+      - name: Fetch latest qubes-builder tag
+        run: |
+          cd ${{ github.workspace }}/qubes-builderv2/
+          git fetch --depth=1 origin "refs/tags/*:refs/tags/*"
       - uses: actions/checkout@v4
         with:
           path: securedrop-workstation-keyring
