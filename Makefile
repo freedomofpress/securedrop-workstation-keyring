@@ -62,15 +62,17 @@ prepare: ## Configure plugins, verify tag
 		exit 1; \
 	fi
 	@wget -q https://keys.qubes-os.org/keys/qubes-developers-keys.asc
-	@gpg --import --quiet qubes-developers-keys.asc
+	@gpg --homedir ../qubes-builderv2/.gnupg --import --quiet qubes-developers-keys.asc
 	@echo "Verify qubes-builderv2 tag"
-	@cd ../qubes-builderv2 && git tag -v `git describe` || (echo "Failed to verify tag" && exit 1)
+	@cd ../qubes-builderv2 && GNUPGHOME=.gnupg git tag -v `git describe` || (echo "Failed to verify tag" && exit 1)
 	@cp sd-qubes-builder/*.asc ../qubes-builderv2/qubesbuilder/plugins/fetch/keys/
-	@rm qubes-developers-keys.asc
+	@rm qubes-developers-keys.asc*
+	@rm -r ../qubes-builderv2/.gnupg ||:
 	@echo "qubes-builderv2 repository configured"
 
+# Reprotest requires the qubes-builder clone step to be included
 .PHONY: build-rpm
-build-rpm: prepare ## Build rpm (default: prod)
+build-rpm: $(if $(REPROTEST),qubes-builder) prepare ## Build rpm (default: prod)
 	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
 
 .PHONY: build-rpm-dev
@@ -85,7 +87,7 @@ build-rpm-staging: ## Build staging rpm (test key, yum-test f37 repo)
 reprotest: ## Test reproducibility
 	@which reprotest > /dev/null || (echo "Install reprotest" && exit 1)
 	@test -e build/*.rpm || (echo "Run \`make build-rpm\` first" && exit 1)
-	@sudo reprotest 'make build-rpm BRANCH="${BRANCH}"' 'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
+	@sudo reprotest 'REPROTEST=1 make build-rpm BRANCH="${BRANCH}" EXECUTOR="${EXECUTOR}" EXECUTOROPTS="${EXECUTOROPTS}"' 'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
 
 ## The below commands should run in CI or a Fedora environment
 # FIXME: the time variations have been temporarily removed from reprotest
