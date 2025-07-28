@@ -9,23 +9,23 @@ The production package will be hosted in Qubes-contrib.
 **At the moment this repo is experimental and should not be part of a production SDW installation.**
 
 ## Setup instructions
-Clone this repository and ensure your system has sufficient free space.
-On non-Qubes systems, install Docker.
+### Qubes
+On Qubes systems, clone the [qubes-builderv2](https://github.com/QubesOS/qubes-builderv2) repo in a sibling directory to this one and configure its dependencies.
+Your disposable build VM should be Fedora-based and should be called `qubes-builder-dvm`.
 
-Then, either proceed to the convenience `make` targets, or clone the [qubes-builderv2](https://github.com/QubesOS/qubes-builderv2) repo in a sibling directory to this one.
+If you are using split-gpg, ensure that you have imported the [Qubes Developer Keys](https://keys.qubes-os.org/keys/qubes-developers-keys.asc) and the [SecureDrop maintainer keys](sd-qubes-builder) into your vault vm. Note: if using split-gpg, it is your responsibility to keep these keys up to date!
+
+### Debian or Fedora
+Clone this repository and ensure your system has sufficient free space. Install docker or podman.
+
+To set up the qubes-builderv2 repository and generate the build container, follow the manual setup instructions, or run `make qubes-builder`.
+If the qubes-builderv2 repository is not already installed in a sibling directory, it will be cloned.
+OS-specific dependencies will be installed (on local machines, you'll be prompted for your passphrase) and the executor image will be generated, which takes some time.
 
 ## Build instructions
-On Qubes systems, `BUILD_OS=qubes` is required to use the Qubes Fedora executor.
+Run `make build-rpm`. On Qubes systems, `BUILD_OS=qubes` is required to use the Qubes Fedora executor.
 
-To set up the qubes-builderv2 repository and generate the build container, run:
-`make qubes-builder`.
-
-Then run `make build-rpm`.
-
-If the qubes-builderv2 repository is not installed in a sibling directory, it will be cloned.
-The first time the qubes-builderv2 repo is set up, OS-specific dependencies will be installed (on local machines, you'll be prompted for your passphrase) and the executor image will be generated, which takes some time.
-
-If you have already set up and configured the qubes-builderv2 repository, skip directly to running `make build-rpm`.
+On succesful builds, an .rpm and .buildinfo file will be written to a `build` directory in this repository.
 
 ### Build variants
 `make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
@@ -53,9 +53,6 @@ Traceback (most recent call last):
 qubes-builderv2 clones a copy of the repository it's trying to build in
 `qubes-builderv2/artifacts/sources/`, and does not take kindly to force-pushes or other
 changes in git history.
-The convenience targets use the provided `qb clean all` command, but in case of repeated
-build failures, manually remove `qubes-builderv2/artifacts/sources/securedrop-workstation-keyring` before rebuilding (recommended when switching remotes
-or branches).
 
 ## SecureDrop Release Signing Key
 See https://media.securedrop.org/media/documents/securedrop-release-key-2021-2.asc for verification.
