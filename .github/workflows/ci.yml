@@ -4,58 +4,7 @@ name: ci
 on: [push, pull_request, merge_group]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    container:
-      image: registry.fedoraproject.org/fedora:37
-    steps:
-      - run: dnf install -y git make rpmlint
-      - name: Lint specfiles
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - run: |
-          git config --global --add safe.directory '*'
-          rpmlint rpm_spec/*.spec
-  build-rpm:
-    runs-on: ubuntu-latest
-    env:
-      CI_SKIP_PREREQS: 1
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: QubesOS/qubes-builderv2
-          path: qubes-builderv2
-      - name: Fetch latest qubes-builder tag
-        run: |
-          cd ${{ github.workspace }}/qubes-builderv2/
-          git fetch --depth=1 origin "refs/tags/*:refs/tags/*"
-      - uses: actions/checkout@v4
-        with:
-          path: securedrop-workstation-keyring
-      # See Makefile and CI_SKIP_PREREQS flag.
-      # GHA image has docker preinstalled
-      - name: Install Qubes-builderv2 dependencies
-        run: |
-          grep -v "^docker\.io$" ${{ github.workspace }}/qubes-builderv2/dependencies-debian.txt | xargs sudo apt install -y -
-      - name: Build container image
-        run: |
-          cd ${{ github.workspace }}/qubes-builderv2
-          ./tools/generate-container-image.sh docker
-      - name: Edit apparmor profile for unix-chkpwd
-        run: |
-          sudo sed -i 's/capability audit_write,$/&\n  # fix: read shadow permissions (linux-pam#686)\n  capability dac_read_search,/' /etc/apparmor.d/unix-chkpwd
-          sudo apparmor_parser -r /etc/apparmor.d/unix-chkpwd
-      - name: Build rpm
-        run: |
-          sudo apt install -y python3-pathspec
-          cd ${{ github.workspace }}/securedrop-workstation-keyring
-          make build-rpm BUILD_CONTAINER=docker BRANCH=${{ github.head_ref || github.ref_name }}
-      - name: Upload RPM
-        uses: actions/upload-artifact@v4
-        id: rpm-upload-step
-        with:
-          name: rpm
-          path: ${{ github.workspace }}/securedrop-workstation-keyring/build/*.rpm
-          retention-days: 5
-          if-no-files-found: error
+  lint-and-build:
+    uses: freedomofpress/securedrop-workstation-keyring/.github/workflows/lint-and-build.yml@main
+    with:
+      target-branch: ${{ github.head_ref || github.ref_name }}

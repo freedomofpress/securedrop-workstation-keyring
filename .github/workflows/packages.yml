@@ -1,0 +1,58 @@
+---
+name: packages
+
+# Build test packages (dev, staging).
+# Prod packages are built outside of GHA using qubes-builderv2.
+
+jobs:
+  build-package:
+    strategy:
+      matrix:
+        target: [dev, staging]
+    # Same trust level as our repo, so we can pin to main instead of a tag/sha
+    uses: freedomofpress/securedrop-workstation-keyring/.github/workflows/lint-and-build.yml@main
+    with:
+      target-branch: ${{ matrix.target }}
+
+  commit-and-push:
+    runs-on: ubuntu-latest
+    container: debian:bookworm
+    needs:
+      - lint-and-build
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install --yes git git-lfs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+      - uses: actions/checkout@v4
+        with:
+          repository: "freedomofpress/securedrop-yum-test"
+          path: "securedrop-yum-test"
+          lfs: true
+          # (TODO, uncomment after workflow review)
+          # token: ${{ secrets.PUSH_TOKEN }}
+          # We need to store credentials here
+          # persist-credentials: true
+      - name: Configure git user
+        run: |
+          git config --global user.email "securedrop@freedom.press"
+          git config --global user.name "sdcibot"
+          cd securedrop-yum-test
+      - if: ${{ matrix.target }} == 'dev'
+        name: Add dev keyring
+        run: |
+          mkdir -p workstation/dom0/f37-nightlies
+          cp -v ../rpm-build/*.rpm workstation/dom0/f37-nightlies/
+          git add .
+      - if: ${{ matrix.target }} == 'staging'
+        name: Add staging keyring
+        run: |
+          mkdir -p workstation/dom0/f37
+          cp -v ../rpm-build/*.rpm workstation/dom0/f37/
+          git add .
+      - name: Commit and push
+          git diff-index --quiet HEAD || git commit -m "Automated securedrop-workstation-keying ${{ matrix.target-branch }} build"
+          # (TODO, uncomment after workflow review)
+          # git push origin main
