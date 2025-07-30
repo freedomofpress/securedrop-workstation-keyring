@@ -8,6 +8,8 @@ on:
         required: true
         type: string
         description: 'Target branch for build'
+    outputs:
+      artifact-id: ${{ jobs.build-rpm.outputs.artifact-id }}
 
 jobs:
   lint:
@@ -28,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI_SKIP_PREREQS: 1
+    outputs:
+      artifact-id: ${{ steps.artifact-upload-step.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,9 +63,10 @@ jobs:
           cd ${{ github.workspace }}/securedrop-workstation-keyring
           make build-rpm BUILD_CONTAINER=docker BRANCH=${{ inputs.target-branch }}
       - name: Upload RPM
+        id: artifact-upload-step
         uses: actions/upload-artifact@v4
-        id: rpm-upload-step
         with:
+          name: keyring-${{ inputs.target-branch }}
           path: ${{ github.workspace }}/securedrop-workstation-keyring/build/*.rpm
           retention-days: 5
           if-no-files-found: error
