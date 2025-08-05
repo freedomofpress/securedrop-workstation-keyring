@@ -19,8 +19,13 @@ jobs:
           rpmlint rpm_spec/*.spec
   build-rpm:
     runs-on: ubuntu-latest
+    needs: [ "lint" ]
+    # merge queue branch name confuses the builder
+    if: |
+      !startsWith( github.ref, 'refs/heads/gh-readonly-queue/' )
     env:
       CI_SKIP_PREREQS: 1
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,12 +55,12 @@ jobs:
         run: |
           sudo apt install -y python3-pathspec
           cd ${{ github.workspace }}/securedrop-workstation-keyring
-          make build-rpm BUILD_CONTAINER=docker BRANCH=${{ github.head_ref || github.ref_name }}
+          make build-rpm BUILD_CONTAINER=docker BRANCH=${{ env.BRANCH_NAME }}
       - name: Upload RPM
         uses: actions/upload-artifact@v4
         id: rpm-upload-step
         with:
-          name: rpm
+          name: rpm-${{ env.BRANCH_NAME }}
           path: ${{ github.workspace }}/securedrop-workstation-keyring/build/*.rpm
           retention-days: 5
           if-no-files-found: error
