@@ -76,11 +76,11 @@ build-rpm: $(if $(REPROTEST),qubes-builder) prepare ## Build rpm (default: prod)
 	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
 
 .PHONY: build-rpm-dev
-build-rpm-dev: ## Build dev rpm (test key, yum-test f37-nightly repo)
+build-rpm-dev: ## Build dev rpm (test key, yum-test fedora-nightly repo)
 	$(MAKE) build-rpm BRANCH=dev
 
 .PHONY: build-rpm-staging
-build-rpm-staging: ## Build staging rpm (test key, yum-test f37 repo)
+build-rpm-staging: ## Build staging rpm (test key, yum-test fedora repo)
 	$(MAKE) build-rpm BRANCH=staging
 
 .PHONY: reprotest
