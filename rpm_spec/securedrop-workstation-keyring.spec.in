@@ -1,5 +1,5 @@
 Name:       securedrop-workstation-keyring
-Version:    0.1.0
+Version:    @version@
 Release:    1%{?dist}
 Summary:    SecureDrop Workstation Keyring
 
@@ -41,7 +41,9 @@ This package contains the SecureDrop Release Signing Key and .repo file used to 
 %setup -q
 
 %build
-# No building necessary
+# Use the specified version
+FEDORA_VERSION=@DIST@
+sed "s/@DIST@/${FEDORA_VERSION}/g" files/securedrop-workstation-dom0.repo.in > files/securedrop-workstation-dom0.repo
 
 %install
 install -m 755 -d %{buildroot}/etc/yum.repos.d

@@ -1,3 +1,4 @@
 build/
+files/securedrop-workstation-dom0.repo
 sd-builder.yml
 qubes-developers-keys.asc*
