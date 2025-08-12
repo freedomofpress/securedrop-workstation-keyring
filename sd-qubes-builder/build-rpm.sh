@@ -10,6 +10,8 @@ set -o pipefail
 : "${BRANCH:?BRANCH missing; use make build-rpm}"
 : "${EXECUTOR:?EXECUTOR missing; use make build-rpm}"
 : "${EXECUTOROPTS:?EXECUTOROPTS missing; use make build-rpm}"
+: "${QUBES_RELEASE:?QUBES_RELEASE missing; use make build-rpm}"
+: "${FEDORA_DIST:?FEDORA_DIST missing; use make build-rpm}"
 
 echo "Copy sd-builder.yml into qubes-builderv2 repo"
 cp sd-qubes-builder/sd-builder.yml.conf ../qubes-builderv2/sd-builder.yml
@@ -29,12 +31,16 @@ echo "Remove SDW-keyring sources from qubes-builder"
 rm -rf ../qubes-builderv2/artifacts/sources/securedrop-workstation-keyring || true
 rm -rf ../qubes-builderv2/artifacts/repository/*/securedrop-workstation-keyring* || true
 
-echo "Begin build..."
+echo "Begin build for Qubes Version ${QUBES_RELEASE} (${FEDORA_DIST})"
 (
   cd ../qubes-builderv2
   ./qb --builder-conf sd-builder.yml \
+      --option use-qubes-repo:version=${QUBES_RELEASE} \
+      --option qubes-release=r${QUBES_RELEASE} \
       --option executor:type="${EXECUTOR}" \
       --option executor:options:"${EXECUTOROPTS}" \
+      --option +distributions+"${FEDORA_DIST}" \
+      -d "${FEDORA_DIST}" \
       -c securedrop-workstation-keyring package fetch prep build
 )
 
