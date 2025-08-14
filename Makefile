@@ -7,6 +7,14 @@ BRANCH ?= "main"
 # On CI, manually install OS dependencies
 CI_SKIP_PREREQS ?= 0
 
+# Which Qubes version to target.
+# FEDORA_DIST is as specified in `distributions` section of builderv2 .yml
+QUBES_RELEASE ?= "4.2"
+FEDORA_DIST = "host-fc37"
+ifeq ($(QUBES_RELEASE),4.3)
+	FEDORA_DIST = "host-fc41"
+endif
+
 # The executor can be docker or podman, or the Qubes Fedora dispvm executor.
 BUILD_CONTAINER ?= $(notdir $(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null))
 EXECUTOR ?= "docker"
@@ -73,7 +81,9 @@ prepare: ## Configure plugins, verify tag
 # Reprotest requires the qubes-builder clone step to be included
 .PHONY: build-rpm
 build-rpm: $(if $(REPROTEST),qubes-builder) prepare ## Build rpm (default: prod)
-	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) sd-qubes-builder/build-rpm.sh
+	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) \
+	QUBES_RELEASE=$(QUBES_RELEASE) FEDORA_DIST=$(FEDORA_DIST) \
+	sd-qubes-builder/build-rpm.sh
 
 .PHONY: build-rpm-dev
 build-rpm-dev: ## Build dev rpm (test key, yum-test f37-nightly repo)
@@ -87,7 +97,10 @@ build-rpm-staging: ## Build staging rpm (test key, yum-test f37 repo)
 reprotest: ## Test reproducibility
 	@which reprotest > /dev/null || (echo "Install reprotest" && exit 1)
 	@test -e build/*.rpm || (echo "Run \`make build-rpm\` first" && exit 1)
-	@sudo reprotest 'REPROTEST=1 make build-rpm BRANCH="${BRANCH}" EXECUTOR="${EXECUTOR}" EXECUTOROPTS="${EXECUTOROPTS}"' 'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
+	@sudo reprotest 'REPROTEST=1 make build-rpm BRANCH="${BRANCH}" \
+		EXECUTOR="${EXECUTOR}" EXECUTOROPTS="${EXECUTOROPTS}" \
+		QUBES_RELEASE="${QUBES_RELEASE}" FEDORA_DIST="${FEDORA_DIST}"' \
+		'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
 
 ## The below commands should run in CI or a Fedora environment
 # FIXME: the time variations have been temporarily removed from reprotest

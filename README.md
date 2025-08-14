@@ -33,6 +33,8 @@ On succesful builds, an .rpm and .buildinfo file will be written to a `build` di
 
 `make build-rpm BRANCH=yourbranchname` also allows you to build from any branch.
 
+`make build-rpm QUBES_RELEASE=4.3` allows you to build to target another Qubes version
+
 #### Troubleshooting failed builds
 When a build fails, you will generally see a traceback printed to the console that ends with
 

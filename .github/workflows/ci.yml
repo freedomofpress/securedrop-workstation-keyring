@@ -18,6 +18,9 @@ jobs:
           git config --global --add safe.directory '*'
           rpmlint rpm_spec/*.spec
   build-rpm:
+    strategy:
+      matrix:
+        qubes_release: ["4.2", "4.3"]
     runs-on: ubuntu-latest
     needs: [ "lint" ]
     # merge queue branch name confuses the builder
@@ -51,16 +54,22 @@ jobs:
         run: |
           sudo sed -i 's/capability audit_write,$/&\n  # fix: read shadow permissions (linux-pam#686)\n  capability dac_read_search,/' /etc/apparmor.d/unix-chkpwd
           sudo apparmor_parser -r /etc/apparmor.d/unix-chkpwd
-      - name: Build rpm
+      - name: Build rpm (Qubes ${{ matrix.qubes_release }})
         run: |
           sudo apt install -y python3-pathspec
           cd ${{ github.workspace }}/securedrop-workstation-keyring
-          make build-rpm BUILD_CONTAINER=docker BRANCH=${{ env.BRANCH_NAME }}
+          make build-rpm BUILD_CONTAINER=docker BRANCH=${{ env.BRANCH_NAME }} QUBES_RELEASE=${{ matrix.qubes_release }}
+      - name: Test Correct repo version
+        run: |
+          sudo apt install -y rpm2cpio
+          cd ${{ github.workspace }}/securedrop-workstation-keyring/build/
+          expected_dom0_fedora=${{ fromJson('{"4.2": "fc37", "4.3": "fc41"}')[matrix.qubes_version] }}
+          rpm2cpio *.rpm | grep --text "baseurl=.*$expected_dom0_fedora"
       - name: Upload RPM
         uses: actions/upload-artifact@v4
         id: rpm-upload-step
         with:
-          name: rpm-${{ env.BRANCH_NAME }}
+          name: rpm-${{ env.BRANCH_NAME }}-${{ matrix.qubes_release }}
           path: ${{ github.workspace }}/securedrop-workstation-keyring/build/*.rpm
           retention-days: 5
           if-no-files-found: error
