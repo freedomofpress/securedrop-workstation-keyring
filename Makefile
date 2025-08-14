@@ -99,8 +99,7 @@ reprotest: ## Test reproducibility
 	@test -e build/*.rpm || (echo "Run \`make build-rpm\` first" && exit 1)
 	@sudo reprotest 'REPROTEST=1 make build-rpm BRANCH="${BRANCH}" \
 		EXECUTOR="${EXECUTOR}" EXECUTOROPTS="${EXECUTOROPTS}" \
-		QUBES_RELEASE="${QUBES_RELEASE}" QUBES_BRANCH="${QUBES_BRANCH}" \
-		FEDORA_DIST="${FEDORA_DIST}"' \
+		QUBES_RELEASE="${QUBES_RELEASE}" FEDORA_DIST="${FEDORA_DIST}"' \
 		'build/*.rpm' --variations '+all,+kernel,-time,-fileordering,-domain_host'
 
 ## The below commands should run in CI or a Fedora environment
