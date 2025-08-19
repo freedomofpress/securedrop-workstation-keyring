@@ -18,10 +18,12 @@ jobs:
           rpmlint rpm_spec/*.spec
   check-signing-key:
     runs-on: ubuntu-latest
+    container: debian:trixie
     steps:
-      - name: Install dependencies
+      - name: Bootstrap Debian system package dependencies
         run: |
-          sudo apt install -y sq
+          apt-get update && apt-get install --yes --no-install-recommends sudo git git-lfs \
+          ca-certificates python3-dev sq
       - uses: actions/checkout@v4
         with:
           persist-credentials: false

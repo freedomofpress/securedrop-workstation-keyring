@@ -9,9 +9,13 @@ SIGNING_KEY_FPR = "2359E6538C0613E652955E6C188EDD3B7B22E6A3"
 SIGNING_KEY_UID = "SecureDrop Release Signing Key <securedrop-release-key-2021@freedom.press>"
 EXPECTED_EXPIRY_YEAR = 2027
 
+MIN_SQ_CLI_VERSION = "1.2.0"
+
 # Check signing key metadata and ensure that there is one key,
 # our key, with the right user and expiry
-signing_key_metadata = subprocess.check_output(["sq", "inspect", SIGNING_KEY_PATH]).decode()
+signing_key_metadata = subprocess.check_output(
+    ["sq", "--cli-version", MIN_SQ_CLI_VERSION, "inspect", SIGNING_KEY_PATH]
+).decode()
 
 fpr = re.search(r"Fingerprint:\s*([\w ]+)", signing_key_metadata)
 uid = re.search(r"UserID:\s*(.+)", signing_key_metadata)
