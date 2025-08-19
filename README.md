@@ -8,7 +8,7 @@ This repository will be submitted for inclusion in Qubes Contrib.
 
 ## Developer setup instructions
 For developer convenience, this repository also includes make targets that bootstrap the qubes-builderv2 repo and allow developers to build and test packages signed by SecureDrop maintainers (i.e. dev and staging packages), as well as a build script.
-These files (Makefile, `sd-qubes-builder` directory) are not required for production package building via Qubes Contrib. OS-specific setup instructions are below.
+These files (Makefile, `sd-qubes-builder` directory, and `scripts` directory) are not required for production package building via Qubes Contrib. OS-specific setup instructions are below.
 
 ### Qubes
 On Qubes systems, clone the [qubes-builderv2](https://github.com/QubesOS/qubes-builderv2) repo in a sibling directory to this one and configure its dependencies.

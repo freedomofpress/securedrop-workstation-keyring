@@ -10,13 +10,24 @@ jobs:
       image: quay.io/fedora/fedora:37
     steps:
       - run: dnf install -y git make rpmlint
-      - name: Lint specfiles
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - run: |
           git config --global --add safe.directory '*'
           rpmlint rpm_spec/*.spec
+  check-signing-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt install -y sq
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check key expiry and metadata
+        run: |
+          python3 ./scripts/check-signing-key-expiry.py
   build-rpm:
     strategy:
       matrix:
