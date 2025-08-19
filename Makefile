@@ -83,7 +83,7 @@ prepare: ## Configure plugins, verify tag
 build-rpm: $(if $(REPROTEST),qubes-builder) prepare ## Build rpm (default: prod)
 	@BRANCH=$(BRANCH) EXECUTOR=$(EXECUTOR) EXECUTOROPTS=$(EXECUTOROPTS) \
 	QUBES_RELEASE=$(QUBES_RELEASE) FEDORA_DIST=$(FEDORA_DIST) \
-	sd-qubes-builder/build-rpm.sh
+	scripts/build-rpm.sh
 
 .PHONY: build-rpm-dev
 build-rpm-dev: ## Build dev rpm (test key, yum-test f37-nightly repo)
