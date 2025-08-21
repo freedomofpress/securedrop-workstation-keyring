@@ -1,5 +1,5 @@
 Name:       securedrop-workstation-keyring
-Version:    0.1.0
+Version:    0.2.0
 Release:    1%{?dist}
 Summary:    SecureDrop Workstation Keyring
 
@@ -82,5 +82,8 @@ if [ $1 -gt 1 ] ; then
 fi
 
 %changelog
+* Thu Aug 21 2025 17:00 SecureDrop Team <securedrop@freedom.press> - 0.2.0
+- Fix DIST substitution and support multiple Fedora versions
+
 * Mon Dec 2 2024 13:12:00 SecureDrop Team <securedrop@freedom.press> - 0.1.0
 - Initial keyring/bootstrap package
