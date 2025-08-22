@@ -1,0 +1,62 @@
+name: Rebase long-running dev and staging branches on main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  rebase-and-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - run: git fetch --all
+      - name: Rebase branches and create PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for ENV in dev staging; do
+
+            # Rebase last commit on main
+            git checkout origin/$ENV -b rebase-$ENV
+            git reset --soft HEAD~1
+            git stash
+
+            git rebase origin/main
+            git stash apply || true
+            git add -A
+
+            # Timestamped commit message
+            TIMESTAMP=$(date -u +"%Y%m%d%H%M%S")
+            COMMIT_MSG="$ENV sdw-keyring package configuration auto-update ($TIMESTAMP). To build a securedrop-workstation-keyring-$ENV package, target this branch in your qubes builderv2 builder.yml file. This is a long-running $ENV branch not intended for merge."
+
+            git commit -m "$COMMIT_MSG"
+
+            # Push to temporary branch
+            git push -u origin rebase-$ENV --force
+
+            PR_BODY=$(cat <<EOF
+I am a bot; this PR was opened automatically.
+
+$COMMIT_MSG
+
+### Test plan:
+- [ ] Visual review
+- [ ] Base branch is $ENV
+EOF
+)
+
+            # Create pull request
+            gh pr create \
+              --title "$ENV keyring auto-update ($TIMESTAMP)" \
+              --body "$PR_BODY" \
+              --base $ENV \
+              --head rebase-$ENV
+
+          done
