@@ -1,6 +1,6 @@
 Name:       securedrop-workstation-keyring
-Version:    0.2.0
-Release:    1%{?dist}
+Version:    @VERSION@
+Release:    @REL@%{?dist}
 Summary:    SecureDrop Workstation Keyring
 
 # For reproducible builds:
