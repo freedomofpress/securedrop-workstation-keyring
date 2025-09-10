@@ -122,8 +122,12 @@ rpmlint: ## Runs rpmlint on the spec file
 	fi
 
 	cp rpm_spec/*.spec.in /tmp/rpmlint-target.spec
+
+	# Workaround for qubes-builder variables
 	sed -i "s/@VERSION@/$(VERSION)/g" /tmp/rpmlint-target.spec
 	sed -i "s/@REL@/1/g" /tmp/rpmlint-target.spec
+	sed -i '/%changelog/d; /@CHANGELOG@/d' /tmp/rpmlint-target.spec
+
 	rpmlint /tmp/rpmlint-target.spec
 
 # Explanation of the below shell command should it ever break.
