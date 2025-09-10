@@ -125,7 +125,7 @@ rpmlint: ## Runs rpmlint on the spec file
 
 	# Workaround for qubes-builder variables
 	sed -i "s/@VERSION@/$(VERSION)/g" /tmp/rpmlint-target.spec
-	sed -i "s/@REL@/1/g" /tmp/rpmlint-target.spec
+	sed -i "s/@REL@/$(RELEASE)/g" /tmp/rpmlint-target.spec
 	sed -i '/%changelog/d; /@CHANGELOG@/d' /tmp/rpmlint-target.spec
 
 	rpmlint /tmp/rpmlint-target.spec
