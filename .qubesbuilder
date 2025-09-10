@@ -1,4 +1,4 @@
 host:
   rpm:
     build:
-    - rpm_spec/securedrop-workstation-keyring.spec.in
+    - rpm_spec/securedrop-workstation-keyring.spec
