@@ -112,9 +112,23 @@ ci-deps: ## Install package dependencies for running tests
 	dnf --setopt=install_weak_deps=False -y install reprotest
 	dnf builddep -y --spec rpm_spec/securedrop-workstation-keyring.spec
 
+# Get release versioning for
+VERSION := $(shell cat version)
+RELEASE := $(shell cat rel)
 .PHONY: rpmlint
 rpmlint: ## Runs rpmlint on the spec file
-	rpmlint rpm_spec/*.spec
+	@if [ $(shell ls -1 rpm_spec/*.spec.in | wc -l) != 1 ]; then \
+		echo multiple .spec.in detected && exit 1; \
+	fi
+
+	cp rpm_spec/*.spec.in /tmp/rpmlint-target.spec
+
+	# Workaround for qubes-builder variables
+	sed -i "s/@VERSION@/$(VERSION)/g" /tmp/rpmlint-target.spec
+	sed -i "s/@REL@/$(RELEASE)/g" /tmp/rpmlint-target.spec
+	sed -i '/%changelog/d; /@CHANGELOG@/d' /tmp/rpmlint-target.spec
+
+	rpmlint /tmp/rpmlint-target.spec
 
 # Explanation of the below shell command should it ever break.
 # 1. Set the field separator to ": ##" to parse lines for make targets.
