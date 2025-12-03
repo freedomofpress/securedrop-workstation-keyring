@@ -47,7 +47,6 @@ This package contains the SecureDrop Release Signing Key and .repo file used to 
 install -m 755 -d %{buildroot}/etc/yum.repos.d
 install -m 755 -d %{buildroot}/etc/pki/rpm-gpg
 install -m 644 files/securedrop-workstation-dom0.repo.in %{buildroot}/etc/yum.repos.d/securedrop-workstation-dom0.repo
-sed -i "s/@DIST@/f%{fedora}/g" %{buildroot}/etc/yum.repos.d/securedrop-workstation-dom0.repo
 install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation
 
 %files
