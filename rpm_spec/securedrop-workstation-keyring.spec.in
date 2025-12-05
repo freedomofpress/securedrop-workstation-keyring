@@ -11,6 +11,11 @@ Summary:    SecureDrop Workstation Keyring
 #     key creation date, expressed as:
 #       `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec`
 %define rpm_key_id gpg-pubkey-7b22e6a3-609966ad
+#
+#   * The following macro is needed because RPM key database operations cannot
+#     happen in dnf<5 during an RPM package installation / uninstallation, etc.
+#     The trick is to schedule them to happen after RPM finishes.
+%define systemd_timer systemd-run --on-active=15s
 
 # For reproducible builds:
 #
@@ -65,7 +70,7 @@ install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    systemd-run  --on-active=15s rpm -e %{rpm_key_id} ||:
+    %{systemd_timer} rpm -e %{rpm_key_id} ||:
 fi
 
 %posttrans
@@ -77,11 +82,11 @@ fi
 #
 # New install
 if [ $1 -eq 1 ] ; then
-    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+    %{systemd_timer} rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
-    systemd-run --on-active=15s sh -c 'rpm -e %{rpm_key_id}; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation' ||:
+    %{systemd_timer} sh -c 'rpm -e %{rpm_key_id}; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation' ||:
 fi
 
 %changelog
