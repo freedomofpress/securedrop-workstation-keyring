@@ -10,12 +10,13 @@ Summary:    SecureDrop Workstation Keyring
 #     last 8 characters of the GPG key's fingerprint, and $CREATIONDATE is the
 #     key creation date, expressed as:
 #       `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec`
+%define systemd_timer systemd-run --timer-property=AccuracySec=1s --on-active=2s timeout 15m
 %define old_rpm_key_id gpg-pubkey-7b22e6a3-609966ad
 #   * The following macros are needed because RPM key database operations cannot
 #     happen in dnf<5 during an RPM package installation / uninstallation, etc.
 #     The trick is to schedule them to happen after RPM finishes.
-%define purge_old_key systemd-run --timer-property=AccuracySec=1s --on-active=15s rpm -e %{old_rpm_key_id} ||:
-%define import_current_key systemd-run --timer-property=AccuracySec=1s --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+%define purge_old_key %{systemd_timer} sh -c "while ! rpm -e %{old_rpm_key_id}; do sleep 2; done"
+%define import_current_key %{systemd_timer} sh -c "while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done"
 
 # For reproducible builds:
 #
