@@ -14,8 +14,8 @@ Summary:    SecureDrop Workstation Keyring
 #   * The following macros are needed because RPM key database operations cannot
 #     happen in dnf<5 during an RPM package installation / uninstallation, etc.
 #     The trick is to schedule them to happen after RPM finishes.
-%define purge_old_key systemd-run  --on-active=15s rpm -e %{old_rpm_key_id} ||:
-%define import_current_key systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+%define purge_old_key systemd-run --timer-property=AccuracySec=1s --on-active=15s rpm -e %{old_rpm_key_id} ||:
+%define import_current_key systemd-run --timer-property=AccuracySec=1s --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
 
 # For reproducible builds:
 #
