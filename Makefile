@@ -70,6 +70,8 @@ prepare: ## Configure plugins, verify tag
 		exit 1; \
 	fi
 	@wget -q https://keys.qubes-os.org/keys/qubes-developers-keys.asc
+	@# Initialize GNUPGHOME with empty common.conf to disable keyboxd (GPG 2.4+)
+	@mkdir -p ../qubes-builderv2/.gnupg && chmod 700 ../qubes-builderv2/.gnupg && echo > ../qubes-builderv2/.gnupg/common.conf
 	@gpg --homedir ../qubes-builderv2/.gnupg --import --quiet qubes-developers-keys.asc
 	@echo "Verify qubes-builderv2 tag"
 	@cd ../qubes-builderv2 && GNUPGHOME=.gnupg git tag -v `git describe` || (echo "Failed to verify tag" && exit 1)
