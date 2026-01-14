@@ -15,7 +15,7 @@ Summary:    SecureDrop Workstation Keyring
 #   * The following macro is needed because RPM key database operations cannot
 #     happen in dnf<5 during an RPM package installation / uninstallation, etc.
 #     The trick is to schedule them to happen after RPM finishes.
-%define systemd_timer systemd-run --on-active=15s
+%define systemd_timer systemd-run --timer-property=AccuracySec=1s --on-active=2s
 
 # For reproducible builds:
 #
