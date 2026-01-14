@@ -13,10 +13,14 @@ Summary:    SecureDrop Workstation Keyring
 %define previous_gpg_key gpg-pubkey-00000000-00000000
 %define current_gpg_key gpg-pubkey-7b22e6a3-609966ad
 #
-#   * The following macro is needed because RPM key database operations cannot
+#   * The following macros are needed because RPM key database operations cannot
 #     happen in dnf<5 during an RPM package installation / uninstallation, etc.
 #     The trick is to schedule them to happen after RPM finishes.
 %define systemd_timer systemd-run --timer-property=AccuracySec=1s --on-active=2s timeout 15m
+#
+#     Import current key (NOTE: key expiry bumps may keep the same 'key name')
+%define import_current_key %{systemd_timer} sh -c 'while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done'
+%define purge_key() %{systemd_timer} sh -c 'while rpm -q %{1} && ! rpm -e %{1}; do sleep 2; done'
 
 # For reproducible builds:
 #
@@ -71,7 +75,7 @@ install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    %{systemd_timer} sh -c 'while rpm -q %{current_gpg_key} && ! rpm -e %{current_gpg_key}; do sleep 2; done'
+    %{purge_key %{current_gpg_key}}
 fi
 
 %posttrans
@@ -83,15 +87,12 @@ fi
 #
 # New install
 if [ $1 -eq 1 ] ; then
-    %{systemd_timer} sh -c 'while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done'
+    %{import_current_key}
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
-    # Purge previous keys
-    %{systemd_timer} sh -c 'while rpm -q %{previous_gpg_key} && ! rpm -e %{previous_gpg_key}; do sleep 2; done'
-
-    # Import the new key (NOTE: key expiry bumps may keep the same 'key name')
-    %{systemd_timer} sh -c 'while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done'
+    %{purge_key %{previous_gpg_key}}
+    %{import_current_key}
 fi
 
 %changelog
