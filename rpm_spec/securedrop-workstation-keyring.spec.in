@@ -10,7 +10,8 @@ Summary:    SecureDrop Workstation Keyring
 #     last 8 characters of the GPG key's fingerprint, and $CREATIONDATE is the
 #     key creation date, expressed as:
 #       `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec`
-%define rpm_key_id gpg-pubkey-7b22e6a3-609966ad
+%define previous_gpg_key gpg-pubkey-00000000-00000000
+%define current_gpg_key gpg-pubkey-7b22e6a3-609966ad
 #
 #   * The following macro is needed because RPM key database operations cannot
 #     happen in dnf<5 during an RPM package installation / uninstallation, etc.
@@ -70,7 +71,7 @@ install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    %{systemd_timer} sh -c 'while rpm -q %{rpm_key_id} && ! rpm -e %{rpm_key_id}; do sleep 2; done'
+    %{systemd_timer} sh -c 'while rpm -q %{current_gpg_key} && ! rpm -e %{current_gpg_key}; do sleep 2; done'
 fi
 
 %posttrans
@@ -86,7 +87,11 @@ if [ $1 -eq 1 ] ; then
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
-    %{systemd_timer} sh -c 'while rpm -q %{rpm_key_id} && ! rpm -e %{rpm_key_id}; do sleep 2; done; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation'
+    # Purge previous keys
+    %{systemd_timer} sh -c 'while rpm -q %{previous_gpg_key} && ! rpm -e %{previous_gpg_key}; do sleep 2; done'
+
+    # Import the new key (NOTE: key expiry bumps may keep the same 'key name')
+    %{systemd_timer} sh -c 'while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done'
 fi
 
 %changelog
