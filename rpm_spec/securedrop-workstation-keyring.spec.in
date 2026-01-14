@@ -70,7 +70,7 @@ install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    %{systemd_timer} sh -c 'while ! rpm -e %{rpm_key_id}; do sleep 2; done'
+    %{systemd_timer} sh -c 'while rpm -q %{rpm_key_id} && ! rpm -e %{rpm_key_id}; do sleep 2; done'
 fi
 
 %posttrans
@@ -86,7 +86,7 @@ if [ $1 -eq 1 ] ; then
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
-    %{systemd_timer} sh -c 'while ! rpm -e %{rpm_key_id}; do sleep 2; done; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation'
+    %{systemd_timer} sh -c 'while rpm -q %{rpm_key_id} && ! rpm -e %{rpm_key_id}; do sleep 2; done; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation'
 fi
 
 %changelog
