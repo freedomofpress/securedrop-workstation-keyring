@@ -3,6 +3,25 @@ Version:    @VERSION@
 Release:    @REL@%{?dist}
 Summary:    SecureDrop Workstation Keyring
 
+# Macros for dealing with key import and old key deletion:
+#
+#   * In rpm database, the pubkey name format is
+#    `gpg-pubkey-$VERSION-$CREATION_SEC_SINCE_UNIX_EPOCH`, where $VERSION is the
+#     last 8 characters of the GPG key's fingerprint, and $CREATIONDATE is the
+#     key creation date, expressed as:
+#       `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec`
+%define previous_gpg_key gpg-pubkey-00000000-00000000
+%define current_gpg_key gpg-pubkey-7b22e6a3-609966ad
+#
+#   * The following macros are needed because RPM key database operations cannot
+#     happen in dnf<5 during an RPM package installation / uninstallation, etc.
+#     The trick is to schedule them to happen after RPM finishes.
+%define systemd_timer systemd-run --timer-property=AccuracySec=1s --on-active=2s timeout 15m
+#
+#     Import current key (NOTE: key expiry bumps may keep the same 'key name')
+%define import_current_key %{systemd_timer} sh -c 'while ! rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation; do sleep 2; done'
+%define purge_key() %{systemd_timer} sh -c 'while rpm -q %{1} && ! rpm -e %{1}; do sleep 2; done'
+
 # For reproducible builds:
 #
 #   * Ensure that SOURCE_DATE_EPOCH env is honored and inherited from the
@@ -56,7 +75,7 @@ install -m 644 files/securedrop-release-signing-pubkey-2021.asc %{buildroot}/etc
 %postun
 # Uninstall
 if [ $1 -eq 0 ] ; then
-    systemd-run  --on-active=15s rpm -e gpg-pubkey-7b22e6a3-609966ad ||:
+    %{purge_key %{current_gpg_key}}
 fi
 
 %posttrans
@@ -68,16 +87,12 @@ fi
 #
 # New install
 if [ $1 -eq 1 ] ; then
-    systemd-run --on-active=15s rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation ||:
+    %{import_current_key}
 fi
 # Upgrade. Uninstall old key then install new key.
 if [ $1 -gt 1 ] ; then
-    # Remove SecureDrop Release Signing Key. In rpm database, the
-    # pubkey name format is `gpg-pubkey-$VERSION-$CREATION_SEC_SINCE_UNIX_EPOCH`,
-    # where $VERSION is the last 8 characters of the GPG key's fingerprint, and
-    # $CREATIONDATE is the key creation date, expressed as
-    # `date -d "1970-1-1 + $((0x$CREATION_UNIX_EPOCH)) sec"`
-    systemd-run --on-active=15s sh -c 'rpm -e gpg-pubkey-7b22e6a3-609966ad; rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-securedrop-workstation' ||:
+    %{purge_key %{previous_gpg_key}}
+    %{import_current_key}
 fi
 
 %changelog
