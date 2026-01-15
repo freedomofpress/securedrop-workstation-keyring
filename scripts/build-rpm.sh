@@ -13,6 +13,11 @@ set -o pipefail
 : "${QUBES_RELEASE:?QUBES_RELEASE missing; use make build-rpm}"
 : "${FEDORA_DIST:?FEDORA_DIST missing; use make build-rpm}"
 
+# Initialize empty signers file
+touch ../qubes-builderv2/.git/allowed_signers
+git -C ../qubes-builderv2/ config --local gpg.ssh.allowedSignersFile \
+    ../qubes-builderv2/.git/allowed_signers
+
 echo "Copy sd-builder.yml into qubes-builderv2 repo"
 cp sd-qubes-builder/sd-builder.yml.conf ../qubes-builderv2/sd-builder.yml
 
