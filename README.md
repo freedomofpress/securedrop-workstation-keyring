@@ -31,6 +31,8 @@ On succesful builds, an .rpm and .buildinfo file will be written to a `build` di
 #### Build variants
 `make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
 
+`make build-rpm-local` build from the local repo.
+
 `make build-rpm BRANCH=yourbranchname` also allows you to build from any branch.
 
 `make build-rpm QUBES_RELEASE=4.3` allows you to build to target another Qubes version
