@@ -86,6 +86,10 @@ build-rpm: $(if $(REPROTEST),qubes-builder) prepare ## Build rpm (default: prod)
 	scripts/build-rpm.sh
 
 .PHONY: build-rpm-dev
+build-rpm-local: ## Build rpm from locally checked out code (for development)
+	$(MAKE) build-rpm BRANCH=local
+
+.PHONY: build-rpm-dev
 build-rpm-dev: ## Build dev rpm (test key, yum-test f37-nightly repo)
 	$(MAKE) build-rpm BRANCH=dev
 
