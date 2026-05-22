@@ -1,4 +1,4 @@
-# SecureDrop Worskatation Keyring (RPM)
+# SecureDrop Workstation Keyring (RPM)
 
 This repository contains the material needed to bootstrap a SecureDrop
 Workstation installation - a .repo file and the SecureDrop Release Signing
@@ -26,7 +26,7 @@ OS-specific dependencies will be installed (on local machines, you'll be prompte
 ### Developer build instructions
 Run `make build-rpm`. On Qubes systems, `BUILD_OS=qubes` is required to use the Qubes Fedora executor.
 
-On succesful builds, an .rpm and .buildinfo file will be written to a `build` directory in this repository.
+On successful builds, an .rpm and .buildinfo file will be written to a `build` directory in this repository.
 
 #### Build variants
 `make build-rpm`, `make build-rpm-staging`, and `make build-rpm-dev` will build respective packages using Qubes builderv2.
